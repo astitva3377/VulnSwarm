@@ -1,0 +1,9 @@
+[project]
+name = "VulnSwarm"
+version = "0.0.1"
+dependencies = [
+	"neo4j>=6.0"
+]
+
+[project.scripts]
+vulnswarm = "app.cli:main"
