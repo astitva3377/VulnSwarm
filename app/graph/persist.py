@@ -2,9 +2,10 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from typing import cast
-from neo4j import GraphDatabase, Query, Session
+from neo4j import GraphDatabase, Query
 from neo4j.exceptions import Neo4jError, DriverError
 from tqdm import tqdm
+from app.config import PersistenceConfig
 from app.graph.schema import NODE_KEY, Batch
 
 
@@ -94,20 +95,15 @@ def _node_jobs(nodes, size) -> list[tuple[str, list]]:
 class Persister:
 	def __init__(
 		self,
-		url: str,
-		user: str,
-		pwd: str,
+		config: PersistenceConfig,
 		db: str = "VulnSwarm",
-		chunk_size: int = 1,
-		concurrency: int = 1
 	) -> None:
 		self.db = db
 		self.driver = GraphDatabase.driver(
-			url,
-			auth=(user, pwd)
+			config.url,
+			auth=(config.user, config.password)
 		)
-		self.chunk_size = chunk_size
-		self.concurrency = concurrency
+		self.config = config
 
 
 	def verify_connection(self) -> None:
@@ -146,7 +142,7 @@ class Persister:
 		if not jobs:
 			return
 
-		if self.concurrency <= 1:
+		if self.config.concurrency <= 1:
 			with self.driver.session(database=self.db) as s:
 				for cypher, rows in tqdm(jobs, total=len(jobs), desc=desc):
 					s.execute_write(_run_write, cypher, rows)
@@ -157,7 +153,7 @@ class Persister:
 			with self.driver.session(database=self.db) as s:
 				s.execute_write(_run_write, cypher, rows)
 
-		with ThreadPoolExecutor(max_workers=self.concurrency) as ex:
+		with ThreadPoolExecutor(max_workers=self.config.concurrency) as ex:
 			futures = [ex.submit(_one, job) for job in jobs]
 
 			for future in tqdm(
@@ -173,8 +169,8 @@ class Persister:
 
 			self.clear(scan_id=batch.scan_id)
 
-			self._run_jobs(_node_jobs(batch.nodes, self.chunk_size), 'Nodes')
-			self._run_jobs(_edge_jobs(batch.edges, self.chunk_size), 'Edges')
+			self._run_jobs(_node_jobs(batch.nodes, self.config.chunk_size), 'Nodes')
+			self._run_jobs(_edge_jobs(batch.edges, self.config.chunk_size), 'Edges')
 
 		except Exception as e:
 			raise GraphPersistenceError(f'Encountered error: {e}') from e

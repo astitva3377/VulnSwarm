@@ -1,5 +1,4 @@
 import hashlib
-import json
 from pathlib import Path
 from app.config import Config
 from app.graph.joern import JoernAdapter
@@ -23,9 +22,9 @@ class GraphBuilder:
 
 		self.joern = JoernAdapter()
 
-		self.neo4j = Persister(url=config.neo4j_url, user=config.neo4j_user, pwd=config.neo4j_password, chunk_size=config.chunk_size, concurrency=config.persist_concurrency)
+		self.neo4j = Persister(config=config.neo4j_config)
 
-	def build(self) -> None:
+	def build(self, scan_id: str) -> str:
 		cpg_dir = (
 			self.config.work_dir
 			/ self.repo.name
@@ -94,6 +93,8 @@ class GraphBuilder:
 		self.neo4j.verify_connection()
 		self.neo4j.persist(batch=batch)
 		print()
+
+		return scan_id
 
 	def close(self) -> None:
 		self.neo4j.close()
