@@ -3,3 +3,4 @@ __pycache__
 VulnSwarm.egg-info
 .env
 web/
+exploit_meta.json

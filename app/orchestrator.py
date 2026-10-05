@@ -15,10 +15,13 @@ class Orchestrator:
 		self.config = config
 		self.watch = watch
 
-	def run(self) -> int:
+	def run(self, skip: bool = False) -> int:
 		self.config.ensure_directories()
 
-		self._build_graph()
+		if not skip:
+			self._build_graph()
+		else:
+			print('Skipped CPG generation, Graph building and embedding stages')
 		# self._discover()
 		# self._verify()
 		# self._report()

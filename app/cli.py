@@ -33,6 +33,12 @@ def build_parser() -> argparse.ArgumentParser:
 		help='Show live progress'
 	)
 
+	scan_parser.add_argument(
+		'--skip',
+		action='store_true',
+		help='Skip CPG generation, Graph building and embedding.'
+	)
+
 	return parser
 
 def validate_repository(repo: Path) -> Path:
@@ -46,7 +52,7 @@ def validate_repository(repo: Path) -> Path:
 
 	return repo
 
-def run_scan(repo: Path, watch: bool) -> int:
+def run_scan(repo: Path, watch: bool, skip: bool) -> int:
 	print(pyfiglet.figlet_format('VulnSwarm', font='slant'))
 	print('Repository:', repo)
 	print('Watch mode:', watch)
@@ -62,7 +68,7 @@ def run_scan(repo: Path, watch: bool) -> int:
 		watch=watch
 	)
 
-	return orchestrator.run()
+	return orchestrator.run(skip=skip)
 
 def main() -> int:
 	parser = build_parser()
@@ -74,7 +80,7 @@ def main() -> int:
 		except ValueError as e:
 			parser.error(str(e))
 
-		return run_scan(repo=repo, watch=args.watch)
+		return run_scan(repo=repo, watch=args.watch, skip=args.skip)
 
 	parser.error('Unknown arguments')
 	return 2

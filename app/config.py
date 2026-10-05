@@ -51,12 +51,14 @@ class PersistenceConfig:
 class AgentConfig:
 	model: str | None = None
 	effort: str | None = None
+	mcp_config: Path = Path(__file__).parent.parent / ".mcp" / "mcp.json"
 
 	@classmethod
 	def from_env(cls) -> "AgentConfig":
 		return cls(
 			model=os.getenv("AGENT_MODEL", cls.model),
-			effort=os.getenv("AGENT_EFFORT", cls.effort)
+			effort=os.getenv("AGENT_EFFORT", cls.effort),
+			mcp_config=Path(os.getenv("MCP_CONFIG", cls.mcp_config))
 		)
 
 @dataclass(frozen=True)

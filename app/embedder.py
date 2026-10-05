@@ -135,19 +135,7 @@ def _build_chunks(repo: Path, methods: list[dict], files: list[str]) -> list[dic
 				'text': "".join(block)
 			})
 	return chunks
-
-# scan_id = '45591caa1bcd80bd28388b2b93b32404588a9833'
-# driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "neo4jneo4j"))
-# methods, files = _get_scan_from_graph(driver, scan_id)
-
-# print('Methods:')
-# for method in methods:
-# 	print(f"  {method['full_name']} ({method['file_path']}:{method['line']})")
-
-# print('Files:')
-# for file in files:
-# 	print(f"  {file}")
-
+	
 
 class Embedder:
 	def __init__(
@@ -200,7 +188,7 @@ class Embedder:
 	def exploit_index_ready(self) -> bool:
 		with self.driver.session(database=self.db) as session:
 			has_index = session.run(
-				"SHOW INDEXES YIELD name WHERE = $name RETURN count(*) AS c",
+				"SHOW INDEXES YIELD name WHERE name = $name RETURN count(*) AS c",
 				name=EXPLOIT_VECTOR_INDEX_NAME
 			).single()
 			if not has_index or not has_index['c']:
